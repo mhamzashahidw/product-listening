@@ -1,0 +1,1637 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ShopVerse </title>
+  <meta name="description" content="ShopVerse demo — single page product listing. Pure HTML/CSS/JS. Responsive, keyboard friendly, cart, search, theme."/>
+  <style>
+    /*   
+       Variables & Reset
+          */
+    :root{
+      --bg-color: #071022;
+      --panel: rgba(11,19,36,0.88);
+      --card: #0b1220;
+      --text: #eef2ff;
+      --muted: #9fb0c8;
+      --brand: #22d3ee;
+      --accent: #a78bfa;
+      --success: #34d399;
+      --danger: #ef4444;
+      --radius: 14px;
+      --shadow-lg: 0 18px 40px rgba(0,0,0,.45);
+      --maxw: 1200px;
+    }
+    *{ box-sizing: border-box; }
+    html,body{ margin:0; padding:0; height:100%; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+
+    /* Body background image + overlay */
+    body{
+      min-height:100%;
+      color:var(--text);
+      background:
+        linear-gradient(180deg, rgba(7,16,34,.65), rgba(7,10,24,.85)),
+        url('assets/bg.jpg') center/cover fixed no-repeat;
+      line-height:1.45;
+      -webkit-font-smoothing:antialiased;
+    }
+    .badge-deal{
+  display:inline-block;
+  padding:2px 6px;
+  background:var(--accent);
+  color:#071022;
+  font-size:11px;
+  font-weight:700;
+  border-radius:4px;
+  margin-left:4px;
+}
+.feature-badge {
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:10px 12px;
+  border-radius:12px;
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  font-weight:700;
+  text-align:center;
+  transition: transform .3s ease, background .3s ease, opacity .3s ease;
+  cursor:default;
+  opacity:0;
+  transform:translateY(24px);
+}
+.feature-badge svg { flex-shrink:0; }
+
+body.light .feature-badge { background: rgba(0,0,0,.05); color: var(--text); }
+
+.feature-badge:hover {
+  transform: translateY(-4px);
+  background: linear-gradient(135deg,var(--brand),var(--accent));
+  color:#071022;
+}
+
+/* Reveal active */
+.feature-badge.active {
+  opacity:1;
+  transform:translateY(0);
+}
+
+    /* Light theme */
+    body.light{
+      --bg-color: #f7fafc;
+      --panel: rgba(255,255,255,0.96);
+      --card: #ffffff;
+      --text: #071022;
+      --muted: #556177;
+      background: linear-gradient(180deg,#f7fafc,#eef2f7);
+    }
+
+    a{ color:inherit; text-decoration:none; }
+    img{ display:block; max-width:100%; height:auto; }
+
+    .container{ width:100%; max-width:var(--maxw); margin:0 auto; padding:0 20px; }
+
+    /*   
+       Header
+          */
+    header.site-header{
+      position: sticky;
+      top:0;
+      z-index:9999;
+      padding:10px 0;
+      background: rgba(6,10,18,.36);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid rgba(255,255,255,.04);
+    }
+    body.light header.site-header{ background: rgba(255,255,255,.92); border-bottom-color: rgba(0,0,0,.06); }
+
+    .navwrap{ display:flex; gap:12px; align-items:center; justify-content:space-between; }
+    .brand{ display:flex; gap:12px; align-items:center; }
+    .brand .logo{ width:44px; height:44px; border-radius:10px; background: linear-gradient(135deg,var(--brand),var(--accent)); box-shadow:var(--shadow-lg); }
+    .brand .title{ font-weight:800; letter-spacing:.2px; }
+
+    nav.primary{ display:flex; align-items:center; gap:14px; }
+    nav.primary a{ padding:8px 10px; border-radius:8px; color:var(--muted); font-weight:700; font-size:14px; }
+    nav.primary a:hover{ background: rgba(255,255,255,.03); color:var(--text); transform:translateY(-2px); }
+
+    /* Search bar layout fixed and not overlapping */
+    .searchbar{ flex:1; max-width:520px; margin:0 14px; position:relative; z-index:30; }
+    .searchbar input{
+      width:100%;
+      padding:10px 44px 10px 14px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(11,19,36,.72);
+      color:var(--text);
+      outline:none;
+      transition: box-shadow .12s ease, border-color .12s ease;
+    }
+    body.light .searchbar input{ background:#fff; border-color: rgba(0,0,0,.06); color:var(--text); }
+    .searchbar .kbd{ position:absolute; right:10px; top:50%; transform:translateY(-50%); font-size:12px; padding:4px 8px; border-radius:8px; background: rgba(255,255,255,.04); color:var(--muted); }
+
+    /* actions */
+    .actions{ display:flex; gap:10px; align-items:center; }
+    .btn{ appearance:none; border:none; cursor:pointer; padding:9px 12px; border-radius:10px; font-weight:800; color:#081022; background: linear-gradient(135deg,var(--brand),var(--success)); box-shadow:var(--shadow-lg); }
+    .btn.ghost{ background:transparent; color:var(--text); border:1px solid rgba(255,255,255,.08); box-shadow:none; }
+    .btn.sm{ padding:7px 10px; font-size:13px; border-radius:9px; }
+    .btn.primary{ color:#071022; }
+
+    /* Mobile adjustments */
+    @media (max-width:800px){
+      nav.primary{ display:none; } /* hide desktop nav on very small; could be swapped with mobile menu */
+      .searchbar{ max-width:100%; order:3; margin-top:8px; }
+      .navwrap{ flex-wrap:wrap; gap:8px; }
+    }
+
+    /*   
+       Hero
+          */
+    .hero{ padding:52px 0 26px; }
+    .hero-inner{ display:grid; grid-template-columns:1.1fr .9fr; gap:22px; align-items:center; }
+    .hero h1{ font-size:clamp(28px,4.5vw,44px); margin:0 0 8px; line-height:1.06; }
+    .hero p{ color:var(--muted); margin:0 0 12px; }
+    .showcase{ min-height:260px; border-radius:var(--radius); display:grid; place-items:center; background: linear-gradient(145deg, rgba(34,211,238,.06), rgba(167,139,250,.06)); border:1px solid rgba(255,255,255,.04); box-shadow:var(--shadow-lg); }
+    .img-ph{ width:86%; height:72%; border-radius:12px; border:1.5px dashed rgba(255,255,255,.12); display:grid; place-items:center; color:var(--muted); padding:12px; }
+
+    /*   
+       Featured
+          */
+    .section{ padding: 20px 0; }
+    .head{ display:flex; justify-content:space-between; align-items:end; gap:12px; margin-bottom:12px; }
+    .featured-grid{ display:grid; grid-template-columns:1fr 320px; gap:18px; align-items:start; }
+
+    .panel{ background:var(--panel); border-radius:16px; padding:12px; border:1px solid rgba(255,255,255,.04); box-shadow:var(--shadow-lg); }
+
+    .media{ height:200px; display:grid; place-items:center; background: rgba(0,0,0,.15); border-radius:10px; color:var(--muted); overflow:hidden; }
+
+    /*   
+       Filters & Grid
+          */
+    .filters{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; padding: 8px 0 18px; }
+    .control{ display:flex; gap:8px; align-items:center; background: rgba(255,255,255,.02); border-radius:10px; padding:8px; border:1px solid rgba(255,255,255,.04); }
+    .control label{ font-size:12px; color:var(--muted); font-weight:700; }
+
+    .grid{ display:grid; grid-template-columns: repeat(12,1fr); gap:16px; }
+    .product-card{
+      grid-column: span 3; background:var(--card); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,.04);
+      box-shadow:var(--shadow-lg); display:flex; flex-direction:column; transition: transform .22s ease, box-shadow .22s ease;
+    }
+    .product-card:hover{ transform:translateY(-6px); }
+    .product-media{ height:160px; background:#071022; display:grid; place-items:center; color:var(--muted); border-bottom:1px solid rgba(255,255,255,.03); }
+    .product-body{ padding:12px; display:grid; gap:8px; flex:1; }
+    .product-title{ font-weight:800; font-size:15px; color:var(--text); }
+    .product-meta{ display:flex; justify-content:space-between; color:var(--muted); font-size:13px; }
+    .price{ color:var(--success); font-weight:900; }
+
+    /* pagination etc. */
+    .pagination{ display:flex; gap:8px; justify-content:center; padding:12px 0 18px; }
+    .page-btn{ padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.04); background:transparent; color:var(--text); cursor:pointer; }
+    .page-btn.active{ background: linear-gradient(135deg,var(--brand),var(--accent)); color:#071022; border:none; }
+
+    /* drawer */
+    .drawer{ position:fixed; right:0; top:0; height:100%; width:360px; background:var(--panel); transform:translateX(110%); transition: transform .28s ease; z-index:9998; display:flex; flex-direction:column; }
+    .drawer.open{ transform:translateX(0); }
+    .drawer header{ padding:12px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,.04); }
+    .cart-list{ padding:12px; overflow:auto; flex:1; display:grid; gap:10px; }
+
+    /* modal */
+    .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background: rgba(0,0,0,.5); z-index:9999; }
+    .modal.open{ display:flex; }
+    .dialog{ width:min(920px,96vw); background:var(--panel); border-radius:14px; padding:12px; border:1px solid rgba(255,255,255,.06); box-shadow:var(--shadow-lg); }
+
+    /* reveal */
+    .reveal{ opacity:0; transform:translateY(24px); transition: opacity .7s ease, transform .7s ease; will-change:transform,opacity; }
+    .reveal.active{ opacity:1; transform:translateY(0); }
+
+    /* responsive */
+    @media (max-width: 1100px){ .grid{ grid-template-columns: repeat(8,1fr); } .product-card{ grid-column: span 4; } .featured-grid{ grid-template-columns: 1fr; } .hero-inner{ grid-template-columns: 1fr; } }
+    @media (max-width: 720px){ .grid{ grid-template-columns: repeat(6,1fr); } .product-card{ grid-column: span 6; } .searchbar{ order:3; width:100%; } .navwrap{ gap:8px; } .brand .title{ display:none; } .drawer{ width:92vw; } }
+
+    /* accessible focus */
+    :focus{ outline: 3px solid rgba(34,211,238,.12); outline-offset: 3px; }
+
+    /* small utilities */
+    .muted{ color:var(--muted); }
+    .visually-hidden{ position:absolute !important; height:1px; width:1px; overflow:hidden; clip:rect(1px,1px,1px,1px); white-space:nowrap; }
+
+:root {
+  --bg-panel: linear-gradient(135deg,#ffffff,#f9f9f9);
+  --text-main: #222;
+  --text-muted: #555;
+  --text-invert: #fff;
+  --quote-bg: #f0f0f0;
+  --quote-text: #222;
+  --highlight: #1c7ed6;
+  --accent-green: #28a745;
+  --panel-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+[data-theme="dark"] {
+  --bg-panel: linear-gradient(135deg,#1e1e2f,#2a2a3d);
+  --text-main: #f5f5f5;
+  --text-muted: #bbb;
+  --text-invert: #fff;
+  --quote-bg: #2e2e42;
+  --quote-text: #f1f1f1;
+  --highlight: #4dabf7;
+  --accent-green: #28a745;
+  --panel-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+/*   ==
+   ABOUT PANEL
+  == */
+.about-title {
+  color: var(--text-invert);
+  transition: color 0.3s ease;
+}
+.about-panel {
+  margin-top:12px;
+  padding:20px;
+  border-radius:12px;
+  background: var(--bg-panel);
+  box-shadow: var(--panel-shadow);
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
+  align-items:center;
+  transition:transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+.about-panel:hover {
+  transform:translateY(-4px);
+  box-shadow:0 6px 16px rgba(0,0,0,0.5);
+}
+
+/*   ==
+   TEXT & QUOTES
+  == */
+.about-text {
+  font-size:1.05rem;
+  line-height:1.6;
+  color: var(--text-main);
+  text-align:justify;
+  margin-bottom:16px;
+  transition: color 0.3s ease;
+}
+.highlight {
+  color: var(--highlight);
+}
+.quote {
+  font-style:italic;
+  font-size:1.1rem;
+  padding:15px 20px;
+  border-radius:8px;
+  margin:20px 0;
+  background: var(--quote-bg);
+  color: var(--quote-text);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+.quote.blue { border-left:4px solid var(--highlight); }
+.quote.green { border-left:4px solid var(--accent-green); }
+
+/* Variables for light & dark */
+:root {
+  --bg-panel: #ffffff;
+  --bg-card: #f8f9fa;
+  --text-main: #1e1e2f;
+  --text-muted: #555;
+  --accent: #4dabf7;
+  --accent-2: #28a745;
+  --shadow: rgba(0,0,0,0.15);
+}
+
+[data-theme="dark"] {
+  --bg-panel: #1e1e2f;
+  --bg-card: #2a2a3d;
+  --text-main: #f1f1f1;
+  --text-muted: #ccc;
+  --accent: #4dabf7;
+  --accent-2: #28a745;
+  --shadow: rgba(0,0,0,0.4);
+}
+
+/* Layout */
+.about-title {
+  color: var(--text-main);
+  transition: color 0.3s ease;
+}
+
+.about-panel {
+  margin-top: 12px;
+  padding: 20px;
+  border-radius: 12px;
+  background: var(--bg-panel);
+  box-shadow: 0 4px 12px var(--shadow);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: center;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.about-text {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--text-main);
+  text-align: justify;
+  margin-bottom: 16px;
+}
+
+.accent {
+  color: var(--accent);
+}
+
+/* Quotes */
+.about-quote {
+  font-style: italic;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  margin: 20px 0;
+  padding: 15px 20px;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.primary-quote {
+  border-left: 4px solid var(--accent);
+  background: var(--bg-card);
+  color: var(--text-main);
+}
+
+.secondary-quote {
+  border-left: 4px solid var(--accent-2);
+  background: var(--bg-card);
+  color: var(--text-muted);
+}
+
+
+@keyframes fadeIn {
+  from { opacity:0; transform:scale(0.95); }
+  to { opacity:1; transform:scale(1); }
+}
+
+@keyframes fadeInUp {
+  from { opacity:0; transform:translateY(20px); }
+  to { opacity:1; transform:translateY(0); }
+}
+
+/* Panel hover */
+.panel:hover {
+  transform:translateY(-4px);
+  box-shadow:0 6px 16px rgba(0,0,0,0.5);
+}
+
+/* Quote hover */
+blockquote:hover {
+  transform:scale(1.02);
+  transition:transform 0.3s ease;
+}
+
+/* Feature badges */
+.feature-badge {
+  background:#2e2e42;
+  border-radius:10px;
+  padding:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.3);
+  text-align:center;
+  color:#f5f5f5;
+  transition:transform 0.3s ease, background 0.3s ease, color 0.3s ease;
+}
+.feature-badge:hover {
+   background: linear-gradient(90deg, #00c6ff, #00ff99);
+  color:#fff;
+  transform:translateY(-5px);
+}
+
+/* Image hover */
+img:hover {
+  transform:scale(1.05);
+}
+
+/* CTA Button */
+.cta-btn {
+  display:inline-block;
+  background: linear-gradient(90deg, #00c6ff, #00ff99);
+  color:#000;
+  font-weight:700;
+  padding:12px 22px;
+  border-radius:12px;
+  text-decoration:none;
+}
+.cta-btn:hover {
+ 
+  transform:translateY(-3px);
+  box-shadow:0 4px 12px rgba(0,0,0,0.4);
+}
+.cta-btn:active {
+  transform:scale(0.97);
+}
+
+         
+
+
+
+
+
+
+
+
+/* FAQ Styles */
+.faq-item {
+  border-bottom: 1px solid var(--border-color, #ddd);
+  padding: 8px 0;
+}
+.faq-question {
+  background: transparent;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.3s, color 0.3s, transform 0.2s;
+}
+.faq-question:hover {
+  background: var(--hover-bg, rgba(0,0,0,0.05));
+  color: var(--accent, #00d4ff);
+  transform: translateX(4px);
+}
+.faq-icon {
+  font-size: 1.2rem;
+}
+.faq-answer {
+  padding: 10px 12px;
+  display: none;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--text-muted, #666);
+}
+.faq-item.active .faq-answer {
+  display: block;
+  animation: fadeIn 0.4s ease-in-out;
+}
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(-5px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+
+
+
+
+
+/* Contact Section */
+#contact {
+  padding: 60px 20px;
+  
+}
+
+.contact-title {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+/* Panel styling */
+.contact-panel {
+  margin-top: 20px;
+  padding: 30px;
+  border-radius: 16px;
+  background: var(--panel-bg);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Form grid */
+.form-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.form-grid .full-width {
+  grid-column: 1 / -1;
+}
+
+/* Inputs + textarea */
+#contactForm input,
+#contactForm textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 1rem;
+  transition: border 0.3s ease, background 0.3s ease;
+}
+
+#contactForm input:focus,
+#contactForm textarea:focus {
+  outline: none;
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+}
+
+/* Actions */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+/* THEME VARIABLES */
+body[data-theme="light"] {
+  --panel-bg: #ffffff;
+  --input-bg: #f9f9f9;
+  --border: #ddd;
+  --text: #222;
+  --accent: #4dabf7;
+}
+
+body[data-theme="dark"] {
+  --panel-bg: #2a2a3d;
+  --input-bg: #1e1e2f;
+  --border: rgba(255,255,255,0.1);
+  --text: #f5f5f5;
+  --accent: #00c6ff;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+  /* Category Card */
+  .category-card {
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .category-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  }
+
+  /* Image wrapper */
+  .cat-img-wrapper {
+    position: relative;
+    width: 100%;
+    height: 180px; /* default mobile */
+    overflow: hidden;
+  }
+
+  .cat-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+  }
+
+  .category-card:hover .cat-img-wrapper img {
+    transform: scale(1.05);
+  }
+
+  /* Responsive image height */
+  @media (min-width: 768px) {
+    .cat-img-wrapper {
+      height: 260px; /* taller on desktop */
+    }
+  }
+
+  /* Content */
+  .cat-content {
+    padding: 16px;
+    text-align: center;
+  }
+
+  .cat-content h3 {
+    margin-top: 8px;
+    margin-bottom: 6px;
+  }
+
+  .cat-content p {
+    margin-bottom: 12px;
+  }
+
+
+
+
+
+
+
+
+
+  /* Deals Card */
+  .deal-card {
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .deal-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  }
+
+  /* Image wrapper */
+  .deal-img-wrapper {
+    position: relative;
+    width: 100%;
+    height: 200px; /* Default for mobile */
+    overflow: hidden;
+  }
+
+  .deal-img-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Responsive image height */
+  @media (min-width: 768px) {
+    .deal-img-wrapper {
+      height: 300px; /* Taller banners on desktop */
+    }
+  }
+
+  /* Discount Badge */
+  .deal-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: linear-gradient(90deg, #ff512f, #dd2476);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 6px 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+
+  /* Content */
+  .deal-content {
+    padding: 16px;
+    text-align: center;
+  }
+
+  .deal-content h3 {
+    margin-top: 8px;
+    margin-bottom: 6px;
+  }
+
+  .deal-content p {
+    margin-bottom: 12px;
+  }
+</style>
+</head>
+<body>
+  <!-- =============== HEADER =============== -->
+  <header class="site-header" id="top">
+    <div class="container navwrap">
+      <a href="#top" class="brand" aria-label="ShopVerse Home">
+        <div class="logo" aria-hidden="true"></div>
+        <div class="title">ShopVerse</div>
+      </a>
+
+      <nav class="primary" aria-label="Primary Navigation">
+        <a href="#home">Home</a>
+        <a href="#products">Products</a>
+        <a href="#categories">Categories</a>
+        <a href="#deals">Deals</a>
+        <a href="#about">About</a>
+        <a href="#faq">FAQ</a>
+        <a href="#contact">Contact</a>
+      </nav>
+
+      <div class="searchbar" role="search">
+        <label class="visually-hidden" for="globalSearch">Search</label>
+        <input id="globalSearch" type="search" placeholder="Search products, owner, category… (press /)" autocomplete="off" />
+        <div class="kbd">/</div>
+      </div>
+
+      <div class="actions">
+        <button id="themeToggle" class="btn ghost" title="Toggle theme">Theme</button>
+        <button id="openCartBtn" class="btn ghost" aria-controls="cartDrawer">Cart</button>
+        <button id="shopNowBtn" class="btn primary">Shop</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- =============== HERO =============== -->
+  <main>
+    <section id="home" class="hero section reveal">
+      <div class="container hero-inner">
+        <div>
+          <h1 class="hero-title reveal">Discover products you’ll love.</h1>
+<p class="hero-sub muted reveal">
+  Welcome to <strong>ShopVerse</strong> — fresh deals daily, fast shipping, and secure checkout.
+  Tip: press <kbd>/</kbd> to search, <kbd>Esc</kbd> to close.
+</p>
+          <div style="margin-top:12px;">
+            <a href="#products" class="btn">Browse Products</a>
+            <a href="#about" class="btn ghost" style="margin-left:8px;">Learn More</a>
+          </div>
+        </div>
+
+   <div class="showcase reveal">
+  <div class="img-ph" style="padding:0; border:none;">
+    <img src="pexels-n-voitkevich-6214450.jpg" 
+         alt="ShopVerse Hero Banner" 
+         style="width:100%; height:auto; border-radius:12px; object-fit:cover;">
+    <p style="margin-top:80px; font-weight:700; font-size:1.2rem; color:var(--text); text-align:center;">
+      Welcome to ShopVerse — Your ultimate online store!
+    </p>
+  </div>
+</div>
+
+
+      </div>
+    </section>
+
+    <!-- =============== FEATURED =============== -->
+    <section id="featured" class="section reveal" style="margin-top:6px;">
+      <div class="container">
+        <div class="head">
+          <h2>Featured</h2>
+          <p class="muted">Use ← / → to switch featured items</p>
+        </div>
+
+        <div class="featured-grid">
+          <div class="panel featured-stage">
+            <div class="media center" id="featuredMedia">Image</div>
+            <div style="margin-top:10px;">
+              <div id="featuredTitle" class="product-title">—</div>
+              <div class="product-meta"><span id="featuredOwner">Owner —</span><span class="price" id="featuredPrice">$0</span></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-top:10px; gap:8px;">
+              <button id="prevFeatured" class="btn sm ghost">◀ Prev</button>
+              <div style="display:flex; gap:8px;"><button id="viewFeatured" class="btn sm ghost">View</button><button id="addFeatured" class="btn sm">Add</button></div>
+              <button id="nextFeatured" class="btn sm ghost">Next ▶</button>
+            </div>
+          </div>
+
+          <aside class="panel tips">
+            <h3 style="margin:0 0 8px;">Tips</h3>
+            <ul style="margin:0; padding-left:18px; color:var(--muted);">
+              <li>Press <strong>/</strong> to focus search</li>
+              <li>Use <strong>←</strong> and <strong>→</strong> to cycle featured</li>
+              <li>Press <strong>Esc</strong> to close modal/drawer</li>
+            </ul>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- =============== PRODUCTS =============== -->
+    <section id="products" class="section reveal">
+      <div class="container">
+        <div class="head">
+          <h2>Products</h2>
+          <p class="muted">Filter, search, and add to cart.</p>
+        </div>
+
+        <div class="filters" aria-label="Filters">
+          <div class="control"><label for="ownerSel">Owner</label><select id="ownerSel"><option value="">All</option></select></div>
+          <div class="control"><label for="catSel">Category</label><select id="catSel"><option value="">All</option></select></div>
+          <div class="control"><label for="minPrice">Min</label><input id="minPrice" type="number" min="0" placeholder="0" /></div>
+          <div class="control"><label for="maxPrice">Max</label><input id="maxPrice" type="number" min="0" placeholder="9999" /></div>
+          <div class="control"><label for="sortSel">Sort</label><select id="sortSel"><option value="relevance">Relevance</option><option value="price-asc">Price ↑</option><option value="price-desc">Price ↓</option><option value="title">Title</option></select></div>
+          <div style="margin-left:auto; display:flex; gap:8px; align-items:center;"><button id="clearFilters" class="btn sm ghost">Clear</button><div class="control"><label>Per page</label><select id="pageSize"><option>12</option><option>18</option><option>24</option></select></div></div>
+        </div>
+
+        <div id="grid" class="grid" aria-live="polite"></div>
+        <div id="pager" class="pagination"></div>
+      </div>
+    </section>
+
+    <!-- =============== CATEGORIES =============== -->
+   <section id="categories" class="section reveal">
+  <div class="container">
+    <div class="head">
+      <h2>Categories</h2>
+      <p class="muted">Quick access</p>
+    </div>
+
+    <div class="grid" style="margin-top:16px; gap:20px;">
+
+      <!-- Electronics -->
+      <div class="panel category-card" style="grid-column:span 4;">
+        <div class="cat-img-wrapper">
+          <img src="electr.webp" alt="Electronics">
+        </div>
+        <div class="cat-content">
+          <h3>Electronics</h3>
+          <p class="muted">Phones, laptops</p>
+          <button class="btn ghost go-cat" data-cat="Electronics">Explore</button>
+        </div>
+      </div>
+
+      <!-- Accessories -->
+      <div class="panel category-card" style="grid-column:span 4;">
+        <div class="cat-img-wrapper">
+          <img src="asec.jpg" alt="Accessories">
+        </div>
+        <div class="cat-content">
+          <h3>Accessories</h3>
+          <p class="muted">Cables, cases</p>
+          <button class="btn ghost go-cat" data-cat="Accessories">Explore</button>
+        </div>
+      </div>
+
+      <!-- Home -->
+      <div class="panel category-card" style="grid-column:span 4;">
+        <div class="cat-img-wrapper">
+          <img src="homes.jpg" alt="Home Appliances">
+        </div>
+        <div class="cat-content">
+          <h3>Home</h3>
+          <p class="muted">Appliances</p>
+          <button class="btn ghost go-cat" data-cat="Home">Explore</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+
+
+
+
+
+    <!-- =============== DEALS / ABOUT / FAQ / CONTACT =============== -->
+<section id="deals" class="section reveal">
+  <div class="container">
+    <h2>Deals</h2>
+    <div class="grid" style="margin-top:16px; gap:20px;">
+
+      <!-- Flash Sale -->
+      <div class="panel deal-card" style="grid-column:span 4;">
+        <div class="deal-img-wrapper">
+          <img src="fsale.jpg" alt="Flash Sale">
+          <span class="deal-badge">-40% OFF</span>
+        </div>
+        <div class="deal-content">
+          <h3>Flash Sale</h3>
+          <p class="muted">Limited time discounts on electronics.</p>
+          <button style="padding: 10px; background-color: transparent;border-radius: 6px;border: 1px solid rgb(47, 28, 28);color: white;font-weight: bold;"><a href="index.html" ghost go-cat" data-cat="Electronics">Shop Now</a></button>
+        </div>
+      </div>
+
+      <!-- Accessory Bundle -->
+      <div class="panel deal-card" style="grid-column:span 4;">
+        <div class="deal-img-wrapper">
+          <img src="buy1.jpg" alt="Accessory Bundle">
+          <span class="deal-badge">Buy 1 Get 1</span>
+        </div>
+        <div class="deal-content">
+          <h3>Accessory Bundle</h3>
+          <p class="muted">Get two for the price of one.</p>
+        <button style="padding: 10px; background-color: transparent;border-radius: 6px;border: 1px solid rgb(47, 28, 28);color: white;font-weight: bold;"><a href="index.html"btn ghost go-cat" data-cat="Accessories">Shop Now</a></button>
+        </div>
+      </div>
+
+      <!-- Home Essentials -->
+      <div class="panel deal-card" style="grid-column:span 4;">
+        <div class="deal-img-wrapper">
+          <img src="homes.jpg" alt="Home Essentials">
+          <span class="deal-badge">-30% OFF</span>
+        </div>
+        <div class="deal-content">
+          <h3>Home Essentials</h3>
+          <p class="muted">Appliances at great prices.</p>
+          <button style="padding: 10px; background-color: transparent;border-radius: 6px;border: 1px solid rgb(47, 28, 28);color: white;font-weight: bold;"><a href="index.html"btn ghost go-cat" data-cat="Home">Shop Now</a></button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+
+
+
+
+
+<section id="about" class="section reveal">
+  <div class="container">
+    <h2 style="color:#fff; transition:color 0.3s ease;">About</h2>
+    <div class="panel" style="margin-top:12px; padding:20px; border-radius:12px; 
+         background:linear-gradient(135deg,#1e1e2f,#2a2a3d); 
+         box-shadow:0 4px 12px rgba(0,0,0,0.4); 
+         display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:center; 
+         transition:transform 0.3s ease, box-shadow 0.3s ease;">
+      
+      <!-- Left Content -->
+      <div style="animation:fadeInUp 1s ease;">
+        <p style="font-size:1.05rem; line-height:1.6; color:#e0e0e0; text-align:justify; margin-bottom:16px;">
+          Welcome to <strong style="color:#4dabf7;">ShopVerse</strong>, your one-stop destination for electronics, fashion, and lifestyle essentials. 
+          We bring together quality, innovation, and convenience to give you a seamless shopping experience.
+        </p>
+
+        <blockquote style="font-style:italic; font-size:1.1rem; color:#fff; 
+            padding:15px 20px; border-left:4px solid #4dabf7; 
+            background:#2e2e42; border-radius:8px; margin:20px 0;">
+          "ShopVerse — where style meets technology, and every product tells a story."
+        </blockquote>
+
+        <div class="about-features" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-top:18px;">
+          <div class="feature-badge reveal">Responsive Design</div>
+          <div class="feature-badge reveal">Dark/Light Theme</div>
+          <div class="feature-badge reveal">Product Search</div>
+          <div class="feature-badge reveal">Category Filters</div>
+          <div class="feature-badge reveal">Shopping Cart</div>
+          <div class="feature-badge reveal">Featured Products</div>
+          <div class="feature-badge reveal">Pagination</div>
+          <div class="feature-badge reveal">Modal Preview</div>
+          <div class="feature-badge reveal">Contact Form</div>
+        </div>
+
+        <blockquote style="font-style:italic; font-size:1.1rem; color:#f1f1f1; 
+            padding:15px 20px; border-left:4px solid #28a745; 
+            background:#2e2e42; border-radius:8px; margin-top:24px;">
+          "Empowering your lifestyle with innovation, style, and unbeatable value." <br>
+          “Discover products that inspire your lifestyle, every single day.”
+        </blockquote>
+
+        <!-- CTA Button -->
+        <div style="margin-top:28px;">
+          <a href="#products" class="cta-btn">Explore Products</a>
+        </div>
+      </div>
+
+      <!-- Right Illustration -->
+      <div style="text-align:center; animation:fadeIn 1.2s ease;">
+        <img src="about.png" alt="ShopVerse Shopping Illustration" 
+             style="max-width:100%; border-radius:12px; 
+             box-shadow:0 4px 12px rgba(0,0,0,0.4); 
+             transition:transform 0.4s ease;">
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+
+
+ <section id="faq" class="section reveal">
+  <div class="container">
+    <h2>FAQ</h2>
+    <div class="panel" style="margin-top:16px;">
+
+      <!-- FAQ ITEM TEMPLATE WITH ICON -->
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">🛍️</span> What is ShopVerse?
+        </button>
+        <div class="faq-answer muted">
+          ShopVerse is your one-stop destination for electronics, fashion, and lifestyle essentials, offering quality and convenience at unbeatable prices.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">🌍</span> Do you offer international shipping?
+        </button>
+        <div class="faq-answer muted">
+          Yes! ShopVerse ships worldwide. Delivery times and costs vary depending on your region.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">🚚</span> How long does delivery take?
+        </button>
+        <div class="faq-answer muted">
+          Standard delivery usually takes 3–7 business days, while international shipping may take 10–15 days.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">💳</span> What payment methods do you accept?
+        </button>
+        <div class="faq-answer muted">
+          We accept all major credit/debit cards, PayPal, and popular digital wallets for your convenience.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">🔒</span> Is my payment information secure?
+        </button>
+        <div class="faq-answer muted">
+          Absolutely. ShopVerse uses encrypted payment gateways and follows strict security standards to protect your data.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">↩️</span> Can I return or exchange a product?
+        </button>
+        <div class="faq-answer muted">
+          Yes, products can be returned or exchanged within 14 days of delivery if they are unused and in original packaging.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">📦</span> Do you offer warranties on electronics?
+        </button>
+        <div class="faq-answer muted">
+          Many of our electronics come with a manufacturer’s warranty. Details are mentioned on each product page.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">🔎</span> How do I track my order?
+        </button>
+        <div class="faq-answer muted">
+          Once shipped, you’ll receive a tracking link via email to follow your order’s journey in real time.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">❌</span> Can I cancel an order?
+        </button>
+        <div class="faq-answer muted">
+          Yes, orders can be canceled within 24 hours of placing them. After dispatch, cancellations are not possible.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">🔥</span> Do you have seasonal sales?
+        </button>
+        <div class="faq-answer muted">
+          Yes! ShopVerse offers seasonal discounts, flash sales, and exclusive bundle deals throughout the year.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">❤️</span> Can I create a wishlist?
+        </button>
+        <div class="faq-answer muted">
+          Yes, you can save your favorite products in a wishlist for quick access later.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">📊</span> Do you offer bulk purchase discounts?
+        </button>
+        <div class="faq-answer muted">
+          Yes, we offer special pricing for bulk purchases. Please contact support for details.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">⭐</span> Is there a loyalty or rewards program?
+        </button>
+        <div class="faq-answer muted">
+          ShopVerse is launching a rewards program soon where you can earn points on every purchase!
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">📞</span> How do I contact customer support?
+        </button>
+        <div class="faq-answer muted">
+          You can reach our support team 24/7 via email, live chat, or the contact form on our website.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">🎁</span> Do you offer gift cards?
+        </button>
+        <div class="faq-answer muted">
+          Yes! ShopVerse gift cards are available in multiple denominations and make the perfect present.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">✨</span> What makes ShopVerse different?
+        </button>
+        <div class="faq-answer muted">
+          ShopVerse blends modern design, innovative features, and curated products to create a seamless shopping experience.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">🌱</span> Do you have eco-friendly products?
+        </button>
+        <div class="faq-answer muted">
+          Yes, we’re proud to feature a growing collection of eco-friendly and sustainable items.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">📱</span> Can I shop on mobile?
+        </button>
+        <div class="faq-answer muted">
+          Absolutely. ShopVerse is fully optimized for mobile, tablet, and desktop shopping.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">💰</span> Do prices include taxes?
+        </button>
+        <div class="faq-answer muted">
+          Prices shown include applicable local taxes. Additional charges may apply depending on your country’s import policies.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question btn ghost">
+          <span class="faq-icon">🆕</span> How often do you add new products?
+        </button>
+        <div class="faq-answer muted">
+          We add new arrivals every week so you can always find the latest trends and innovations.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+
+
+
+
+
+<section id="contact" class="section reveal">
+  <div class="container">
+    <h2 class="contact-title">Contact Us</h2>
+    <div class="contact-panel">
+      <form id="contactForm">
+        <div class="form-grid">
+          <div>
+            <label class="visually-hidden" for="contactName">Name</label>
+            <input id="contactName" type="text" placeholder="Your Name" required />
+          </div>
+          <div>
+            <label class="visually-hidden" for="contactEmail">Email</label>
+            <input id="contactEmail" type="email" placeholder="you@example.com" required />
+          </div>
+          <div class="full-width">
+            <label class="visually-hidden" for="contactMessage">Message</label>
+            <textarea id="contactMessage" rows="5" placeholder="How can we help?"></textarea>
+          </div>
+          <div class="full-width form-actions">
+            <button type="reset" class="btn ghost">Reset</button>
+            <button type="submit" class="btn">Send Message</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+
+
+  </main>
+
+  <!-- =============== FOOTER =============== -->
+  <footer class="site-footer" style="margin-top:28px;">
+    <div class="container footwrap" style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; padding:14px 0;">
+      <div><h4>ShopVerse</h4><p class="muted">  
+      <br>
+      Crafted with ❤️ for shoppers who love quality.</p></div>
+      <div><h4>Explore</h4>
+  <ul style="list-style:none;padding:0;margin:0;color:var(--muted);">
+    <li><a href="#products">Products</a></li>
+    <li><a href="#categories">Categories</a></li>
+    <li><a href="#deals">Deals</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+</div>
+
+      <div><h4>Company</h4><ul style="list-style:none;padding:0;margin:0;color:var(--muted);"><li><a href="#about">About</a></li><li><a href="#faq">FAQ</a></li></ul></div>
+      <div><h4>Legal</h4><ul style="list-style:none;padding:0;margin:0;color:var(--muted);"><li><a href="#">Privacy</a></li><li><a href="#">Terms</a></li></ul></div>
+    </div>
+    <div class="container"><div style="text-align:center;color:var(--muted);padding:10px 0 20px;">© <span id="year"></span> ShopVerse. All rights reserved.</div></div>
+  </footer>
+
+  <!-- =============== CART DRAWER =============== -->
+  <aside id="cartDrawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
+    <header><strong id="cartTitle">Your Cart</strong><button id="closeCartBtn" class="btn sm ghost">Close</button></header>
+    <div class="cart-list" id="cartItems"></div>
+    <footer style="border-top:1px solid rgba(255,255,255,.06);">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:12px;"><span>Subtotal</span><strong id="cartSubtotal">$0</strong></div>
+      <div style="padding:12px;"><button id="checkoutBtn" class="btn">Checkout (demo)</button></div>
+    </footer>
+  </aside>
+
+  <!-- =============== PRODUCT MODAL =============== -->
+  <div id="productModal" class="modal" aria-hidden="true" role="dialog">
+    <div class="dialog">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:1px solid rgba(255,255,255,.06);">
+        <strong id="modalTitle">Product</strong>
+        <div style="display:flex;gap:8px;"><button id="modalAdd" class="btn sm">Add</button><button id="modalClose" class="btn sm ghost">Close</button></div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; padding-top:10px;">
+        <div id="modalImage" style="min-height:200px;background:rgba(0,0,0,.12);border-radius:8px;display:grid;place-items:center;">Image</div>
+        <div>
+          <h3 id="modalName">—</h3>
+          <div style="margin:6px 0;" class="product-meta"><span id="modalOwner">Owner —</span><span class="price" id="modalPrice">$0</span></div>
+          <p id="modalDesc" class="muted">Description</p>
+          <div id="modalTags" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =============== SCRIPTS =============== -->
+  <script>
+   /*   
+   Data generation & state
+      */
+const baseProducts = [
+  {id:1, title:'Smartphone X1', owner:'Alice', price:799, category:'Electronics', img:'xiomi.jpg', desc:'Powerful smartphone with all-day battery.'},
+  {id:2, title:'Gaming Laptop Z', owner:'Bob', price:1299, category:'Electronics', img:'OIP.jpg', desc:'High-performance gaming laptop.'},
+  {id:3, title:'Wireless Earbuds', owner:'Carla', price:199, category:'Accessories', img:'OIP1.jpg', desc:'Noise isolating earbuds.'},
+  {id:4, title:'Smartwatch Pro', owner:'Devon', price:299, category:'Accessories', img:'R.jpg', desc:'Fitness tracking and notifications.'},
+  {id:5, title:'4K Monitor', owner:'Alice', price:499, category:'Electronics', img:'R1.jpg', desc:'Crisp 4K display.'},
+
+  // New products (example images, replace with your own in /assets folder)
+  {id:6, title:'Portable Charger', owner:'Eve', price:120, category:'Electronics', img:'th.jpg', desc:'Fast charging portable power bank.'},
+  {id:7, title:'Bluetooth Speaker', owner:'Frank', price:89, category:'Electronics', img:'OIP3.jpg', desc:'Compact speaker with deep bass.'},
+  {id:8, title:'Travel Bag', owner:'Alice', price:150, category:'Accessories', img:'OIP2.webp', desc:'Durable and spacious travel bag.'},
+  {id:9, title:'Fitness Band', owner:'Bob', price:79, category:'Sports', img:'OIP4.jpg', desc:'Track your fitness and sleep.'},
+  {id:10, title:'Smart Lamp', owner:'Carla', price:60, category:'Home', img:'OIP5.jpg', desc:'Adjustable brightness smart lamp.'},
+  {id:11, title:'Noise Headset', owner:'Devon', price:249, category:'Electronics', img:'OIP6.webp', desc:'Noise cancelling headset.'},
+  {id:12, title:'Thermal Mug', owner:'Eve', price:25, category:'Home', img:'OIP7.webp', desc:'Keeps drinks hot or cold.'},
+  {id:13, title:'Bean Grinder', owner:'Frank', price:55, category:'Home', img:'OIP8.webp', desc:'Electric coffee bean grinder.'},
+  {id:14, title:'Yoga Mat', owner:'Alice', price:40, category:'Sports', img:'OIP9.webp', desc:'Non-slip yoga mat for workouts.'},
+  {id:15, title:'Action Camera', owner:'Bob', price:299, category:'Electronics', img:'OIP10.jpg', desc:'Capture every adventure in 4K.'},
+  {id:16, title:'Desk Lamp', owner:'Carla', price:35, category:'Home', img:'OIP11.webp', desc:'Modern LED desk lamp.'},
+  {id:17, title:'Air Purifier', owner:'Devon', price:220, category:'Home', img:'OIP12.webp', desc:'Breathe cleaner, fresher air.'},
+  {id:18, title:'Running Shoes', owner:'Eve', price:130, category:'Sports', img:'OIP13.jpg', desc:'Lightweight and durable running shoes.'},
+  {id:19, title:'Jacket', owner:'Frank', price:180, category:'Clothing', img:'OIP14.webp', desc:'Stylish and warm winter jacket.'},
+  {id:20, title:'Backpack', owner:'Alice', price:90, category:'Accessories', img:'OIP15.avif', desc:'Comfortable and waterproof backpack.'},
+  {id:21, title:'Mechanical Keyboard', owner:'Bob', price:150, category:'Electronics', img:'OIP16.jpg', desc:'RGB mechanical gaming keyboard.'},
+  {id:22, title:'Headphones', owner:'Carla', price:110, category:'Electronics', img:'OIP17.jpg', desc:'Over-ear studio headphones.'},
+  {id:23, title:'Monitor', owner:'Devon', price:400, category:'Electronics', img:'OIP18.jpg', desc:'27-inch full HD monitor.'},
+  {id:24, title:'Camera', owner:'Eve', price:600, category:'Electronics', img:'OIP20.webp', desc:'DSLR camera with high resolution.'},
+  {id:25, title:'Sunglasses', owner:'Frank', price:75, category:'Accessories', img:'OIP19.webp', desc:'Stylish UV-protection sunglasses.'}
+];
+
+// Use this directly instead of generator
+const products = [...baseProducts];
+
+    // app state
+    const state = {
+      search: '',
+      owner: '',
+      category: '',
+      min: null,
+      max: null,
+      sort: 'relevance',
+      page: 1,
+      pageSize: Number(document.getElementById('pageSize')?.value || 12),
+      cart: JSON.parse(localStorage.getItem('shopverse_cart')||'[]'),
+      featuredIndex: 0,
+      modalId: null,
+      theme: localStorage.getItem('shopverse_theme') || 'dark'
+    };
+
+    /*   
+       Helpers
+          */
+    const $ = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
+    const currency = n => `$${Number(n).toLocaleString()}`;
+
+    function saveCart(){ localStorage.setItem('shopverse_cart', JSON.stringify(state.cart)); renderCart(); }
+
+    function addToCart(id, qty=1){
+      id = Number(id);
+      const existing = state.cart.find(i=>i.id===id);
+      if(existing) existing.qty += qty;
+      else{
+        const p = products.find(x=>x.id===id);
+        if(!p) return;
+        state.cart.push({id:p.id, title:p.title, price:p.price, img:p.img, qty});
+      }
+      saveCart();
+      openDrawer();
+    }
+    function removeFromCart(id){ state.cart = state.cart.filter(i=>i.id!==Number(id)); saveCart(); }
+    function updateQty(id, delta){ const it = state.cart.find(i=>i.id===Number(id)); if(!it) return; it.qty = Math.max(1, it.qty+delta); saveCart(); }
+
+    /*   
+       Filter & sort pipeline
+          */
+    function filteredProducts(){
+      const term = state.search.trim().toLowerCase();
+      let list = products.filter(p=>{
+        const hay = `${p.title} ${p.owner} ${p.category}`.toLowerCase();
+        if(term && !hay.includes(term)) return false;
+        if(state.owner && p.owner!==state.owner) return false;
+        if(state.category && p.category!==state.category) return false;
+        if(state.min!=null && p.price < state.min) return false;
+        if(state.max!=null && p.price > state.max) return false;
+        return true;
+      });
+      if(state.sort==='price-asc') list.sort((a,b)=>a.price-b.price);
+      else if(state.sort==='price-desc') list.sort((a,b)=>b.price-a.price);
+      else if(state.sort==='title') list.sort((a,b)=>a.title.localeCompare(b.title));
+      return list;
+    }
+
+    /*   
+       Render grid + pager
+          */
+    function renderGrid(){
+      const wrap = $('#grid');
+      const list = filteredProducts();
+      state.pageSize = Number($('#pageSize')?.value || state.pageSize);
+      const pages = Math.max(1, Math.ceil(list.length/state.pageSize));
+      state.page = Math.min(state.page, pages);
+      const start = (state.page-1)*state.pageSize;
+      const items = list.slice(start, start+state.pageSize);
+      wrap.innerHTML = '';
+      items.forEach((p, idx)=>{
+        const card = document.createElement('article');
+        card.className = 'product-card reveal';
+        card.style.transitionDelay = `${(idx%state.pageSize)*0.03}s`;
+        card.innerHTML = `
+          <div class="product-media"><img src="${p.img}" alt="${p.title}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.filter='grayscale(60%)'"/></div>
+          <div class="product-body">
+            <div class="product-title">${escapeHtml(p.title)}</div>
+            <div class="product-meta"><span>${escapeHtml(p.owner)}</span><span class="price">${currency(p.price)}</span></div>
+            <div style="font-size:13px;color:var(--muted)">${escapeHtml(truncate(p.desc,120))}</div>
+            <div style="margin-top:8px;display:flex;gap:8px;">
+              <button class="btn sm ghost view-btn" data-id="${p.id}">View</button>
+              <button class="btn sm" data-add="${p.id}">Add</button>
+            </div>
+          </div>`;
+        wrap.appendChild(card);
+      });
+      renderPager(pages);
+      renderFeatured();
+      observeReveals();
+    }
+
+    function renderPager(total){
+      const pager = $('#pager');
+      pager.innerHTML = '';
+      const make = (text, cls, cb) => { const b=document.createElement('button'); b.className=cls; b.textContent=text; b.addEventListener('click',cb); return b; };
+      pager.appendChild(make('Prev','page-btn',()=>{ state.page=Math.max(1,state.page-1); renderGrid(); scrollTo('#products'); }));
+      for(let i=1;i<=total;i++){ const b=make(i, i===state.page?'page-btn active':'page-btn',()=>{ state.page=i; renderGrid(); scrollTo('#products'); }); pager.appendChild(b); }
+      pager.appendChild(make('Next','page-btn',()=>{ state.page=Math.min(total,state.page+1); renderGrid(); scrollTo('#products'); }));
+    }
+
+    /*   
+       Featured
+          */
+    function getFeaturedList(){ return filteredProducts(); }
+    function renderFeatured(){
+      const list = getFeaturedList();
+      if(!list.length){ $('#featuredTitle').textContent='No products'; $('#featuredOwner').textContent='—'; $('#featuredPrice').textContent='$0'; $('#featuredMedia').textContent='No image'; return;}
+      state.featuredIndex = ((state.featuredIndex % list.length)+list.length)%list.length;
+      const p = list[state.featuredIndex];
+      $('#featuredTitle').textContent = p.title;
+      $('#featuredOwner').textContent = `Owner: ${p.owner}`;
+      $('#featuredPrice').textContent = currency(p.price);
+      $('#featuredMedia').innerHTML = `<img src="${p.img}" alt="${p.title}" style="max-width:100%;max-height:180px;border-radius:8px;" onerror="this.style.filter='grayscale(60%)'"/>`;
+    }
+
+    /*   
+       Cart rendering
+          */
+    function renderCart(){
+      const wrap = $('#cartItems');
+      wrap.innerHTML = '';
+      let subtotal = 0;
+      if(state.cart.length===0){ wrap.innerHTML = '<div class="muted" style="padding:12px;">Cart is empty.</div>'; }
+      else{
+        state.cart.forEach(it=>{
+          subtotal += it.price*it.qty;
+          const row = document.createElement('div');
+          row.className = 'cart-item';
+          row.style.display='flex'; row.style.alignItems='center'; row.style.justifyContent='space-between';
+          row.style.padding='8px'; row.style.background='rgba(255,255,255,.02)'; row.style.borderRadius='10px';
+          row.innerHTML = `<div style="display:flex;gap:10px;align-items:center;"><img src="${it.img}" alt="${it.title}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;"/><div><div style="font-weight:800">${escapeHtml(it.title)}</div><div class="muted">${currency(it.price)}</div></div></div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;"><div style="display:flex;gap:6px;align-items:center;"><button class="btn sm ghost cart-decr" data-id="${it.id}">-</button><div>${it.qty}</div><button class="btn sm ghost cart-incr" data-id="${it.id}">+</button></div><button class="btn sm ghost cart-rem" data-id="${it.id}">Remove</button></div>`;
+          wrap.appendChild(row);
+        });
+      }
+      $('#cartSubtotal').textContent = currency(subtotal);
+    }
+
+    /*   
+       Modal open/close
+          */
+    function openModal(pid){
+      const p = products.find(x=>x.id===Number(pid)); if(!p) return;
+      state.modalId = p.id;
+      $('#modalTitle').textContent = p.title;
+      $('#modalName').textContent = p.title;
+      $('#modalOwner').textContent = `Owner: ${p.owner}`;
+      $('#modalPrice').textContent = currency(p.price);
+      $('#modalDesc').textContent = p.desc;
+      $('#modalImage').innerHTML = `<img src="${p.img}" alt="${p.title}" style="max-width:100%;border-radius:8px;" onerror="this.style.filter='grayscale(60%)'"/>`;
+      $('#modalTags').innerHTML = (p.tags||[]).map(t=>`<span class="chip" style="margin-right:6px;padding:6px;border-radius:999px;background:rgba(255,255,255,.04)">${t}</span>`).join('');
+      $('#productModal').classList.add('open');
+    }
+    function closeModal(){ $('#productModal').classList.remove('open'); state.modalId=null; }
+
+    /*   
+       Drawer
+          */
+    function openDrawer(){ $('#cartDrawer').classList.add('open'); }
+    function closeDrawer(){ $('#cartDrawer').classList.remove('open'); }
+
+    /*   
+       Event wiring
+          */
+    function wireEvents(){
+      // theme
+      $('#themeToggle').addEventListener('click', ()=>{
+        state.theme = (state.theme === 'light') ? 'dark' : 'light';
+        localStorage.setItem('shopverse_theme', state.theme);
+        applyTheme();
+      });
+
+      // search
+      const g = $('#globalSearch');
+      g.addEventListener('input', e=>{ state.search = e.target.value; state.page = 1; renderGrid(); });
+      // keyboard: / to focus
+      document.addEventListener('keydown',(e)=>{
+        const tag = document.activeElement?.tagName || '';
+        if(e.key === '/' && tag !== 'INPUT' && tag !== 'TEXTAREA'){ e.preventDefault(); $('#globalSearch').focus(); $('#globalSearch').select(); }
+        if(e.key === 'Escape'){ if($('#productModal').classList.contains('open')) closeModal(); if($('#cartDrawer').classList.contains('open')) closeDrawer(); }
+        if(e.key === 'ArrowLeft'){ state.featuredIndex--; renderFeatured(); }
+        if(e.key === 'ArrowRight'){ state.featuredIndex++; renderFeatured(); }
+      });
+
+      // filter controls
+      $('#ownerSel').addEventListener('change', e=>{ state.owner=e.target.value; state.page=1; renderGrid(); });
+      $('#catSel').addEventListener('change', e=>{ state.category=e.target.value; state.page=1; renderGrid(); });
+      $('#minPrice').addEventListener('input', e=>{ state.min = e.target.value===''?null:Number(e.target.value); state.page=1; renderGrid(); });
+      $('#maxPrice').addEventListener('input', e=>{ state.max = e.target.value===''?null:Number(e.target.value); state.page=1; renderGrid(); });
+      $('#sortSel').addEventListener('change', e=>{ state.sort=e.target.value; state.page=1; renderGrid(); });
+      $('#clearFilters').addEventListener('click', ()=>{ state.owner=''; state.category=''; state.min=null; state.max=null; state.sort='relevance'; $('#ownerSel').value=''; $('#catSel').value=''; $('#minPrice').value=''; $('#maxPrice').value=''; $('#sortSel').value='relevance'; $('#globalSearch').value=''; state.search=''; state.page=1; renderGrid(); });
+
+      // pageSize
+      $('#pageSize').addEventListener('change', ()=>{ state.page = 1; renderGrid(); });
+
+      // grid delegate for view/add
+      $('#grid').addEventListener('click', (e)=>{
+        const v = e.target.closest('.view-btn'); if(v) openModal(v.dataset.id);
+        const a = e.target.closest('[data-add]'); if(a) addToCart(a.dataset.add,1);
+      });
+
+      // cart delegation
+      $('#cartItems').addEventListener('click', (e)=>{
+        const inc = e.target.closest('.cart-incr'); const dec = e.target.closest('.cart-decr'); const rem = e.target.closest('.cart-rem');
+        if(inc) updateQty(inc.dataset.id, +1);
+        if(dec) updateQty(dec.dataset.id, -1);
+        if(rem) removeFromCart(rem.dataset.id);
+      });
+
+      // drawer buttons
+      $('#openCartBtn').addEventListener('click', openDrawer);
+      $('#closeCartBtn').addEventListener('click', closeDrawer);
+      $('#checkoutBtn').addEventListener('click', ()=>alert("Checkout demo — That's all frontend — Backend Coming Soon."));
+
+      // modal buttons
+      $('#modalClose').addEventListener('click', closeModal);
+      $('#modalAdd').addEventListener('click', ()=>{ if(state.modalId) addToCart(state.modalId,1); });
+
+      // featured nav
+      $('#prevFeatured').addEventListener('click', ()=>{ state.featuredIndex--; renderFeatured(); });
+      $('#nextFeatured').addEventListener('click', ()=>{ state.featuredIndex++; renderFeatured(); });
+      $('#viewFeatured').addEventListener('click', ()=>{ const list = getFeaturedList(); if(list.length) openModal(list[state.featuredIndex].id); });
+      $('#addFeatured').addEventListener('click', ()=>{ const list = getFeaturedList(); if(list.length) addToCart(list[state.featuredIndex].id); });
+
+      // go-cat buttons
+      $$('.go-cat').forEach(b=>b.addEventListener('click',(e)=>{ const cat=e.currentTarget.dataset.cat; $('#catSel').value=cat; state.category=cat; state.page=1; renderGrid(); scrollTo('#products'); }));
+
+      // contact demo
+      $('#contactForm').addEventListener('submit', (e)=>{ e.preventDefault(); alert('Thanks — demo form submitted'); e.target.reset(); });
+    }
+
+    /*   
+       Observer for reveal animations
+          */
+    let revealObserver = null;
+    function observeReveals(){
+      if(!('IntersectionObserver' in window)){ $$('.reveal').forEach(el=>el.classList.add('active')); return; }
+      if(!revealObserver){
+        revealObserver = new IntersectionObserver((entries)=>{
+          entries.forEach(entry=>{
+            if(entry.isIntersecting){ entry.target.classList.add('active'); revealObserver.unobserve(entry.target); }
+          });
+        }, {threshold:0.06});
+      }
+      $$('.reveal').forEach(el=>revealObserver.observe(el));
+      $$('.product-card').forEach(el=>revealObserver.observe(el));
+    }
+
+    /*   
+       Utility functions
+          */
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+    function truncate(s,n=100){ if(!s) return ''; return s.length>n? s.slice(0,n-1)+'…':s; }
+    function scrollTo(sel){ const el=document.querySelector(sel); if(!el) return; window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 72, behavior:'smooth' }); }
+
+    /*   
+       Apply theme
+          */
+    function applyTheme(){ if(state.theme==='light') document.body.classList.add('light'); else document.body.classList.remove('light'); $('#themeToggle').textContent = state.theme==='light' ? 'Light' : 'Theme'; localStorage.setItem('shopverse_theme', state.theme); }
+    state.theme = localStorage.getItem('shopverse_theme') || state.theme;
+    applyTheme();
+
+    /*   
+       Render owners/categories options
+          */
+    function populateOwnerCategory(){
+      const owners = Array.from(new Set(products.map(p=>p.owner))).sort();
+      const cats = Array.from(new Set(products.map(p=>p.category))).sort();
+      const ownerSel = $('#ownerSel'); const catSel = $('#catSel');
+      owners.forEach(o=>{ const opt=document.createElement('option'); opt.value=o; opt.textContent=o; ownerSel.appendChild(opt); });
+      cats.forEach(c=>{ const opt=document.createElement('option'); opt.value=c; opt.textContent=c; catSel.appendChild(opt); });
+    }
+
+    /*   
+       Init: render + wire
+          */
+    function init(){
+
+      populateOwnerCategory();
+      renderGrid();
+      renderCart();
+      renderFeatured();
+      wireEvents();
+      observeReveals();
+      $$('.feature-badge').forEach(el => revealObserver.observe(el));
+      $('#year').textContent = new Date().getFullYear();
+
+      // quick accessibility: focus styles for keyboard users
+      $$('button, a, input, select, textarea').forEach(el=>{ el.addEventListener('focus', ()=>el.classList.add('focus-visible')); el.addEventListener('blur', ()=>el.classList.remove('focus-visible')); });
+
+      // guard: close modal when clicking outside
+      $('#productModal').addEventListener('click', (e)=>{ if(e.target === $('#productModal')) closeModal(); });
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+
+    /*   
+       Extra small helpers used by event delegation
+          */
+    // ensure function definitions earlier are hoisted/available for use by handlers (already done)
+    // Simple FAQ toggle
+document.querySelectorAll('.faq-question').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const ans = btn.nextElementSibling;
+    ans.style.display = ans.style.display==='none'?'block':'none';
+  });
+});
+const dealBadge = p.deal ? `<span class="badge-deal">Deal</span>` : '';
+card.innerHTML = `
+  <div class="product-media">
+    <img src="${p.img}" alt="${p.title}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.filter='grayscale(60%)'"/>
+    ${dealBadge}
+  </div>
+  ...
+`;
+// FAQ accordion toggle
+document.querySelectorAll(".faq-question").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const item = btn.parentElement;
+    item.classList.toggle("active");
+  });
+});
+
+  </script>
+</body>
+</html>
